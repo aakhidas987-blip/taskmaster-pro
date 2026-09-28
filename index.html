@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<meta name="description" content="TaskMaster Pro — a local-first, feature-rich productivity workspace.">
+<title>TaskMaster Pro</title>
+
+<!-- Allowed external dependencies: CDN scripts only -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter','ui-sans-serif','system-ui','sans-serif'] },
+      colors: { ink:'#0b1020', brand:'#7c3aed', cyanx:'#06b6d4' },
+      boxShadow: {
+        glass:'0 18px 60px rgba(0,0,0,.25)',
+        soft:'0 10px 35px rgba(15,23,42,.14)'
+      }
+    }
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+:root{--bg:#eef2ff;--panel:rgba(255,255,255,.68);--panel2:rgba(255,255,255,.86);--text:#172033;--muted:#64748b;--line:rgba(100,116,139,.18);--brand:#7c3aed;--brand2:#06b6d4;--shadow:0 18px 60px rgba(15,23,42,.12)}
+.dark{--bg:#070b17;--panel:rgba(15,23,42,.68);--panel2:rgba(15,23,42,.88);--text:#e7eefc;--muted:#94a3b8;--line:rgba(148,163,184,.16);--shadow:0 18px 60px rgba(0,0,0,.35)}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#64748b transparent}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:
+radial-gradient(circle at 10% 0%,rgba(124,58,237,.18),transparent 30rem),
+radial-gradient(circle at 100% 10%,rgba(6,182,212,.14),transparent 28rem),var(--bg);color:var(--text);min-height:100vh}
+.glass{background:var(--panel);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--line);box-shadow:var(--shadow)}
+.glass-solid{background:var(--panel2);border:1px solid var(--line);box-shadow:var(--shadow)}
+.gradient-text{background:linear-gradient(100deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{transition:.18s ease;transform:translateZ(0)}.btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0) scale(.98)}
+.input{background:rgba(148,163,184,.08);border:1px solid var(--line);color:var(--text);outline:none}.input:focus{border-color:rgba(124,58,237,.6);box-shadow:0 0 0 4px rgba(124,58,237,.10)}
+select option{background:#111827;color:#fff}
+.light select option{background:#fff;color:#111827}
+.pill{border:1px solid var(--line);background:rgba(148,163,184,.07)}
+.scroll-area{overflow:auto}
+.progress-track{background:rgba(148,163,184,.14)}
+.progress-fill{background:linear-gradient(90deg,#7c3aed,#06b6d4)}
+.priority-high{color:#fb7185;background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.22)}
+.priority-medium{color:#fbbf24;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.22)}
+.priority-low{color:#34d399;background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.22)}
+.category-work{background:rgba(99,102,241,.12);color:#818cf8}.category-personal{background:rgba(236,72,153,.12);color:#f472b6}
+.category-study{background:rgba(6,182,212,.12);color:#22d3ee}.category-fitness{background:rgba(16,185,129,.12);color:#34d399}.category-shopping{background:rgba(245,158,11,.12);color:#fbbf24}
+.task-card{transition:.2s ease}.task-card:hover{transform:translateY(-2px);border-color:rgba(124,58,237,.28)}
+.task-card.completed{opacity:.72}.task-card.completed .task-title{text-decoration:line-through;color:var(--muted)}
+.sidebar-link{transition:.16s}.sidebar-link.active,.sidebar-link:hover{background:rgba(124,58,237,.12);color:#a78bfa}
+.modal-backdrop{background:rgba(2,6,23,.72);backdrop-filter:blur(8px)}
+.fade-in{animation:fade .25s ease}.pop{animation:pop .25s ease}@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes pop{0%{transform:scale(.96);opacity:.4}100%{transform:scale(1);opacity:1}}
+.shimmer{background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);background-size:200% 100%;animation:shimmer 1.6s infinite}@keyframes shimmer{to{background-position:-200% 0}}
+.drag-over{outline:2px dashed #8b5cf6;outline-offset:4px}
+.calendar-cell{min-height:95px}.today-ring{box-shadow:inset 0 0 0 2px #8b5cf6}
+.kbd{border:1px solid var(--line);background:rgba(148,163,184,.1);border-radius:6px;padding:2px 6px;font-size:11px}
+.nav-mobile{padding-bottom:env(safe-area-inset-bottom)}
+@media(max-width:1023px){.sidebar{display:none}.main-pad{padding:1rem}.calendar-cell{min-height:72px}}
+@media(min-width:1024px){.main-pad{padding:1.5rem 2rem}}
+</style>
+</head>
+
+<body class="dark">
+<div id="app" class="min-h-screen">
+
+<!-- Sidebar -->
+<aside class="sidebar fixed left-0 top-0 bottom-0 w-[265px] z-40 p-4">
+  <div class="glass h-full rounded-3xl p-4 flex flex-col">
+    <div class="flex items-center gap-3 px-2 py-2 mb-5">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 grid place-items-center text-white shadow-lg">
+        <i class="fa-solid fa-check-double"></i>
+      </div>
+      <div>
+        <div class="font-extrabold tracking-tight">TaskMaster <span class="gradient-text">Pro</span></div>
+        <div class="text-[10px] uppercase tracking-[.18em] text-slate-500">Productivity OS</div>
+      </div>
+    </div>
+
+    <div class="px-2 mb-4">
+      <button onclick="openTaskModal()" class="btn w-full rounded-2xl py-3 bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-bold shadow-lg shadow-violet-900/20">
+        <i class="fa-solid fa-plus mr-2"></i> New Task <span class="float-right text-xs opacity-60 kbd">N</span>
+      </button>
+    </div>
+
+    <nav class="space-y-1 text-sm" id="sidebarNav">
+      <button data-view="dashboard" class="sidebar-link active w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-grid-2 w-5"></i> Dashboard</button>
+      <button data-view="today" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-regular fa-calendar-day w-5"></i> Today <span id="todayBadge" class="float-right text-xs text-slate-400">0</span></button>
+      <button data-view="upcoming" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-regular fa-calendar w-5"></i> Upcoming</button>
+      <button data-view="overdue" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-triangle-exclamation w-5"></i> Overdue <span id="overdueBadge" class="float-right text-xs text-rose-400">0</span></button>
+      <button data-view="completed" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-circle-check w-5"></i> Completed</button>
+      <button data-view="calendar" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-regular fa-calendar-days w-5"></i> Calendar</button>
+      <button data-view="analytics" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-chart-line w-5"></i> Analytics</button>
+      <button data-view="habits" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-fire-flame-curved w-5"></i> Habits</button>
+      <button data-view="focus" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-bullseye w-5"></i> Focus Mode</button>
+      <button data-view="projects" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5"><i class="fa-solid fa-layer-group w-5"></i> Projects</button>
+    </nav>
+
+    <div class="mt-auto">
+      <div class="rounded-2xl p-3 bg-gradient-to-br from-violet-500/10 to-cyan-500/10 border border-violet-500/10">
+        <div class="flex justify-between items-center text-xs mb-2"><span class="font-semibold">Level <span id="levelText">1</span></span><span id="xpText">0 XP</span></div>
+        <div class="h-1.5 progress-track rounded-full overflow-hidden"><div id="xpBar" class="progress-fill h-full rounded-full" style="width:0%"></div></div>
+        <div class="text-[10px] text-slate-500 mt-2">Earn XP by completing tasks.</div>
+      </div>
+      <button data-view="settings" class="sidebar-link w-full text-left rounded-xl px-3 py-2.5 mt-3"><i class="fa-solid fa-sliders w-5"></i> Settings</button>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="lg:ml-[265px] main-pad pb-24 lg:pb-8">
+  <header class="glass rounded-3xl p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4 mb-5 sticky top-3 z-30">
+    <div class="flex-1">
+      <div class="text-xs uppercase tracking-[.2em] text-violet-400 font-bold mb-1">Workspace</div>
+      <h1 id="pageTitle" class="text-2xl md:text-3xl font-extrabold tracking-tight">Good afternoon 👋</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="relative flex-1 md:w-72">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
+        <input id="searchInput" class="input w-full rounded-xl pl-9 pr-16 py-2.5 text-sm" placeholder="Search tasks..." aria-label="Search tasks">
+        <span class="absolute right-2 top-2.5 kbd">⌘ K</span>
+      </div>
+      <button id="cmdBtn" class="btn glass rounded-xl w-10 h-10 grid place-items-center" title="Command palette"><i class="fa-solid fa-terminal"></i></button>
+      <button id="themeBtn" class="btn glass rounded-xl w-10 h-10 grid place-items-center" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <button id="notifyBtn" class="btn glass rounded-xl w-10 h-10 grid place-items-center relative" title="Notifications"><i class="fa-regular fa-bell"></i><span id="notifyDot" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-cyan-400"></span></button>
+      <button onclick="openProfile()" class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white font-bold grid place-items-center">TM</button>
+    </div>
+  </header>
+
+  <!-- Dashboard -->
+  <section id="view-dashboard" class="view fade-in">
+    <div class="grid xl:grid-cols-[1.5fr_.85fr] gap-5">
+      <div class="glass rounded-3xl p-5 md:p-6 relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-violet-500/10 blur-3xl"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="text-sm text-slate-400">Today's momentum</div>
+              <div class="text-3xl md:text-4xl font-extrabold mt-1"><span id="heroPercent">0</span>% <span class="text-base font-medium text-slate-500">complete</span></div>
+            </div>
+            <div class="text-right">
+              <div class="inline-flex items-center gap-2 pill rounded-full px-3 py-1.5 text-sm"><i class="fa-solid fa-fire text-orange-400"></i><b id="streakText">0</b> day streak</div>
+            </div>
+          </div>
+          <div class="mt-5 h-3 progress-track rounded-full overflow-hidden"><div id="heroProgress" class="progress-fill h-full rounded-full transition-all duration-500" style="width:0%"></div></div>
+          <div class="flex justify-between text-xs text-slate-500 mt-2"><span id="heroDone">0 completed</span><span id="heroTotal">0 total</span></div>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-5 flex items-center gap-5">
+        <div class="w-28 h-28 rounded-full relative grid place-items-center shrink-0" id="scoreRing">
+          <div class="absolute inset-0 rounded-full" style="background:conic-gradient(#8b5cf6 0deg,rgba(148,163,184,.13) 0deg)"></div>
+          <div class="absolute inset-[7px] rounded-full" style="background:var(--bg)"></div>
+          <div class="relative text-center"><div id="scoreText" class="text-2xl font-extrabold">0</div><div class="text-[9px] uppercase tracking-widest text-slate-500">Score</div></div>
+        </div>
+        <div>
+          <div class="text-sm text-slate-400">Productivity score</div>
+          <div class="font-bold text-lg mt-1" id="scoreLabel">Ready when you are</div>
+          <p class="text-xs text-slate-500 mt-1">Complete high-priority work, maintain streaks, and keep your plan current.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counter cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 my-5">
+      <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span class="text-xs text-slate-500">Total</span><i class="fa-solid fa-list-check text-violet-400"></i></div><div id="totalCount" class="text-2xl font-extrabold mt-2">0</div></div>
+      <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span class="text-xs text-slate-500">Pending</span><i class="fa-regular fa-clock text-cyan-400"></i></div><div id="pendingCount" class="text-2xl font-extrabold mt-2">0</div></div>
+      <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span class="text-xs text-slate-500">Completed</span><i class="fa-solid fa-circle-check text-emerald-400"></i></div><div id="completedCount" class="text-2xl font-extrabold mt-2">0</div></div>
+      <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span class="text-xs text-slate-500">Overdue</span><i class="fa-solid fa-triangle-exclamation text-rose-400"></i></div><div id="overdueCount" class="text-2xl font-extrabold mt-2">0</div></div>
+    </div>
+
+    <div class="grid xl:grid-cols-[1.25fr_.75fr] gap-5">
+      <div class="glass rounded-3xl p-4 md:p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button class="filter-tab active pill rounded-full px-3 py-1.5 text-xs" data-filter="all">All</button>
+            <button class="filter-tab pill rounded-full px-3 py-1.5 text-xs" data-filter="active">Active</button>
+            <button class="filter-tab pill rounded-full px-3 py-1.5 text-xs" data-filter="completed">Completed</button>
+            <button class="filter-tab pill rounded-full px-3 py-1.5 text-xs" data-filter="today">Due Today</button>
+            <button class="filter-tab pill rounded-full px-3 py-1.5 text-xs" data-filter="high">High Priority</button>
+          </div>
+          <div class="flex gap-2">
+            <select id="categoryFilter" class="input rounded-xl px-3 py-2 text-xs"><option value="all">All categories</option><option>Work</option><option>Personal</option><option>Study</option><option>Fitness</option><option>Shopping</option></select>
+            <select id="sortSelect" class="input rounded-xl px-3 py-2 text-xs"><option value="created">Newest</option><option value="due">Due date</option><option value="priority">Priority</option><option value="title">Title</option></select>
+          </div>
+        </div>
+        <div id="taskList" class="space-y-3"></div>
+      </div>
+
+      <div class="space-y-5">
+        <div class="glass rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-4"><h2 class="font-bold">Smart planning</h2><span class="text-xs pill rounded-full px-2 py-1">Local AI</span></div>
+          <div class="rounded-2xl p-4 bg-gradient-to-br from-violet-500/10 to-cyan-500/10 border border-violet-500/10">
+            <div class="flex gap-3"><div class="w-9 h-9 rounded-xl bg-violet-500/15 text-violet-300 grid place-items-center"><i class="fa-solid fa-wand-magic-sparkles"></i></div><div><div class="font-semibold text-sm">Turn a thought into a task</div><p class="text-xs text-slate-500 mt-1">Try “Finish biology report tomorrow at 4pm high priority”.</p></div></div>
+            <div class="flex gap-2 mt-3"><input id="nlInput" class="input rounded-xl px-3 py-2 text-xs flex-1" placeholder="e.g. Study math Friday 6pm"><button onclick="parseNaturalTask()" class="btn rounded-xl px-3 bg-violet-600 text-white text-xs font-bold">Create</button></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <button onclick="startFocus()" class="btn glass rounded-xl p-3 text-left"><i class="fa-solid fa-bullseye text-violet-400"></i><div class="text-xs font-semibold mt-1">Focus session</div></button>
+            <button onclick="openCommand()" class="btn glass rounded-xl p-3 text-left"><i class="fa-solid fa-keyboard text-cyan-400"></i><div class="text-xs font-semibold mt-1">Command center</div></button>
+          </div>
+        </div>
+
+        <div class="glass rounded-3xl p-5">
+          <div class="flex justify-between items-center mb-4"><h2 class="font-bold">Today's agenda</h2><button onclick="setView('calendar')" class="text-xs text-violet-400">View calendar</button></div>
+          <div id="agenda" class="space-y-2"></div>
+        </div>
+
+        <div class="glass rounded-3xl p-5">
+          <div class="flex justify-between items-center"><h2 class="font-bold">Achievements</h2><span id="achievementCount" class="text-xs text-slate-500">0 unlocked</span></div>
+          <div id="achievements" class="grid grid-cols-4 gap-2 mt-4"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Other views share a renderer -->
+  <section id="view-list" class="view hidden"></section>
+  <section id="view-calendar" class="view hidden"></section>
+  <section id="view-analytics" class="view hidden"></section>
+  <section id="view-habits" class="view hidden"></section>
+  <section id="view-focus" class="view hidden"></section>
+  <section id="view-projects" class="view hidden"></section>
+  <section id="view-settings" class="view hidden"></section>
+</main>
+
+<!-- Mobile nav -->
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 nav-mobile px-2 pt-2">
+  <div class="glass rounded-2xl p-2 flex justify-around">
+    <button onclick="setView('dashboard')" class="p-2 text-xs text-violet-400"><i class="fa-solid fa-grid-2 block text-lg mb-1"></i>Home</button>
+    <button onclick="setView('today')" class="p-2 text-xs"><i class="fa-regular fa-calendar-day block text-lg mb-1"></i>Today</button>
+    <button onclick="openTaskModal()" class="w-12 h-12 -mt-6 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white shadow-xl"><i class="fa-solid fa-plus"></i></button>
+    <button onclick="setView('calendar')" class="p-2 text-xs"><i class="fa-regular fa-calendar block text-lg mb-1"></i>Calendar</button>
+    <button onclick="openCommand()" class="p-2 text-xs"><i class="fa-solid fa-bars block text-lg mb-1"></i>More</button>
+  </div>
+</nav>
+
+<!-- Task modal -->
+<div id="taskModal" class="hidden fixed inset-0 z-50 modal-backdrop items-center justify-center p-3 md:p-6">
+ <div class="glass-solid rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-auto fade-in">
+  <div class="p-5 border-b border-slate-500/10 flex items-center justify-between sticky top-0 bg-[var(--panel2)] z-10">
+    <div><div id="modalEyebrow" class="text-xs text-violet-400 uppercase tracking-widest font-bold">Task editor</div><h2 id="modalTitle" class="text-xl font-extrabold">Create a task</h2></div>
+    <button onclick="closeTaskModal()" class="w-9 h-9 rounded-xl pill"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <form id="taskForm" class="p-5 space-y-4">
+    <input type="hidden" id="taskId">
+    <div><label class="text-xs text-slate-500">Task title *</label><input id="taskTitle" required class="input w-full rounded-xl px-3 py-3 mt-1 font-semibold" placeholder="What needs to get done?"></div>
+    <div><label class="text-xs text-slate-500">Description / notes</label><textarea id="taskDesc" rows="3" class="input w-full rounded-xl px-3 py-3 mt-1 resize-none" placeholder="Add details, context, links, or notes..."></textarea></div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div><label class="text-xs text-slate-500">Category</label><select id="taskCategory" class="input w-full rounded-xl px-3 py-2.5 mt-1"><option>Work</option><option>Personal</option><option>Study</option><option>Fitness</option><option>Shopping</option></select></div>
+      <div><label class="text-xs text-slate-500">Priority</label><select id="taskPriority" class="input w-full rounded-xl px-3 py-2.5 mt-1"><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div><label class="text-xs text-slate-500">Due date</label><input id="taskDueDate" type="date" class="input w-full rounded-xl px-3 py-2.5 mt-1"></div>
+      <div><label class="text-xs text-slate-500">Due time</label><input id="taskDueTime" type="time" class="input w-full rounded-xl px-3 py-2.5 mt-1"></div>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div><label class="text-xs text-slate-500">Project</label><select id="taskProject" class="input w-full rounded-xl px-3 py-2.5 mt-1"><option value="">No project</option></select></div>
+      <div><label class="text-xs text-slate-500">Tags <span class="text-slate-600">(comma separated)</span></label><input id="taskTags" class="input w-full rounded-xl px-3 py-2.5 mt-1" placeholder="exam, urgent, sprint"></div>
+    </div>
+    <div>
+      <div class="flex justify-between items-center mb-2"><div class="text-sm font-bold">Subtasks / checklist</div><button type="button" onclick="addSubtaskInput()" class="text-xs text-violet-400"><i class="fa-solid fa-plus mr-1"></i>Add subtask</button></div>
+      <div id="subtaskEditor" class="space-y-2"></div>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-3">
+      <label class="pill rounded-xl p-3 flex gap-3 items-center text-xs"><input id="taskRecurring" type="checkbox" class="accent-violet-500"> Recurring</label>
+      <select id="taskRecurrence" class="input rounded-xl px-3 py-2.5 text-xs"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
+      <input id="taskEstimate" type="number" min="0" class="input rounded-xl px-3 py-2.5 text-xs" placeholder="Estimate (min)">
+    </div>
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" onclick="closeTaskModal()" class="btn pill rounded-xl px-4 py-2.5 text-sm">Cancel</button>
+      <button class="btn rounded-xl px-5 py-2.5 bg-violet-600 text-white font-bold text-sm"><i class="fa-solid fa-floppy-disk mr-2"></i>Save task</button>
+    </div>
+  </form>
+ </div>
+</div>
+
+<!-- Command -->
+<div id="commandModal" class="hidden fixed inset-0 z-50 modal-backdrop items-start justify-center p-4 pt-[12vh]">
+ <div class="glass-solid rounded-3xl w-full max-w-xl overflow-hidden fade-in">
+  <div class="p-4 border-b border-slate-500/10"><div class="relative"><i class="fa-solid fa-terminal absolute left-3 top-3 text-slate-500"></i><input id="commandInput" class="input w-full rounded-xl pl-9 pr-3 py-3" placeholder="Type a command..." autofocus></div></div>
+  <div id="commandList" class="p-2"></div>
+  <div class="px-4 py-3 text-[11px] text-slate-500 border-t border-slate-500/10 flex justify-between"><span>Navigate with ↑ ↓</span><span><span class="kbd">Enter</span> run · <span class="kbd">Esc</span> close</span></div>
+ </div>
+</div>
+
+<!-- Profile -->
+<div id="profileModal" class="hidden fixed inset-0 z-50 modal-backdrop items-center justify-center p-4">
+ <div class="glass-solid rounded-3xl w-full max-w-md p-6 fade-in">
+   <div class="flex justify-between"><div><div class="text-xs text-violet-400 uppercase tracking-widest">Profile</div><h2 class="text-xl font-extrabold mt-1">Local workspace</h2></div><button onclick="closeProfile()" class="w-9 h-9 rounded-xl pill"><i class="fa-solid fa-xmark"></i></button></div>
+   <div class="flex items-center gap-4 my-6"><div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 grid place-items-center text-white text-xl font-bold">TM</div><div><div class="font-bold">TaskMaster User</div><div class="text-xs text-slate-500">Local account · offline ready</div></div></div>
+   <div class="grid grid-cols-2 gap-2"><button onclick="toast('Google OAuth requires a server-side identity provider in production.','info')" class="pill rounded-xl p-3 text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button onclick="toast('Email authentication is a backend feature; this demo keeps data local.','info')" class="pill rounded-xl p-3 text-sm"><i class="fa-regular fa-envelope mr-2"></i>Email Login</button></div>
+   <div class="mt-3 text-xs text-slate-500 leading-5">Your tasks never leave this browser unless you explicitly export or connect an external integration.</div>
+ </div>
+</div>
+
+<!-- Toasts -->
+<div id="toastWrap" class="fixed top-4 right-4 z-[70] w-[min(380px,calc(100vw-2rem))] space-y-2"></div>
+
+<!-- Notification drawer -->
+<div id="notifDrawer" class="hidden fixed top-20 right-4 z-40 w-[min(380px,calc(100vw-2rem))] glass-solid rounded-2xl p-4">
+ <div class="flex justify-between mb-3"><h3 class="font-bold">Notification center</h3><button onclick="toggleNotifications()" class="text-slate-500"><i class="fa-solid fa-xmark"></i></button></div>
+ <div id="notifications" class="space-y-2 text-sm"></div>
+</div>
+
+<script>
+/* =========================
+   TaskMaster Pro — local-first app
+   ========================= */
+const KEY='taskmaster-pro-v3';
+const PREF='taskmaster-pro-prefs';
+const PROJECT_KEY='taskmaster-pro-projects';
+const HABIT_KEY='taskmaster-pro-habits';
+
+const uid=()=>crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
+const isoNow=()=>new Date().toISOString();
+const pad=n=>String(n).padStart(2,'0');
+const dateKey=d=>{const x=new Date(d);return `${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}`};
+const todayKey=()=>dateKey(new Date());
+const fmtDate=d=>{if(!d)return 'No due date'; const x=new Date(d+'T00:00:00'); return x.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const priorityRank={High:3,Medium:2,Low:1};
+
+let tasks=load(KEY,[]);
+let projects=load(PROJECT_KEY,[
+ {id:uid(),name:'Personal',color:'#8b5cf6',description:'Life and personal goals'},
+ {id:uid(),name:'Work',color:'#06b6d4',description:'Projects and work deliverables'},
+ {id:uid(),name:'Study',color:'#10b981',description:'Learning and study plan'}
+]);
+let habits=load(HABIT_KEY,[
+ {id:uid(),name:'Read 20 minutes',icon:'📚',streak:0,doneDates:[]},
+ {id:uid(),name:'Move your body',icon:'🏃',streak:0,doneDates:[]},
+ {id:uid(),name:'Plan tomorrow',icon:'🧠',streak:0,doneDates:[]}
+]);
+let prefs=load(PREF,{theme:'dark',filter:'all',category:'all',sort:'created',view:'dashboard'});
+let currentView=prefs.view||'dashboard';
+let currentFilter=prefs.filter||'all';
+let editingId=null;
+let audioCtx=null;
+let focusTimer=null, focusSeconds=25*60;
+
+function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
+function save(){localStorage.setItem(KEY,JSON.stringify(tasks));localStorage.setItem(PROJECT_KEY,JSON.stringify(projects));localStorage.setItem(HABIT_KEY,JSON.stringify(habits))}
+function savePrefs(){localStorage.setItem(PREF,JSON.stringify(prefs))}
+function isOverdue(t){return !t.completed && t.dueDate && new Date(`${t.dueDate}T${t.dueTime||'23:59'}`)<new Date()}
+function isToday(t){return t.dueDate===todayKey()}
+function taskCompletion(t){if(!t.subtasks?.length)return t.completed?100:0;return Math.round(t.subtasks.filter(s=>s.done).length/t.subtasks.length*100)}
+function ensureDates(){return}
+function seedIfEmpty(){
+ if(tasks.length)return;
+ const td=todayKey(); const tom=new Date();tom.setDate(tom.getDate()+1);
+ tasks=[
+  {id:uid(),title:'Plan my week',description:'Review goals, priorities and important deadlines.',category:'Personal',priority:'High',dueDate:td,dueTime:'18:00',createdAt:isoNow(),completed:false,subtasks:[{id:uid(),text:'Review calendar',done:true},{id:uid(),text:'Pick top 3 priorities',done:false}],tags:['planning'],projectId:projects[0].id,estimate:20,recurring:false},
+  {id:uid(),title:'Finish science assignment',description:'Complete the remaining questions and proofread before submitting.',category:'Study',priority:'High',dueDate:td,dueTime:'20:00',createdAt:new Date(Date.now()-86400000).toISOString(),completed:false,subtasks:[{id:uid(),text:'Questions 1–5',done:true},{id:uid(),text:'Questions 6–10',done:false},{id:uid(),text:'Proofread',done:false}],tags:['school'],projectId:projects[2].id,estimate:45,recurring:false},
+  {id:uid(),title:'Buy groceries',description:'Milk, fruit, vegetables, rice and snacks.',category:'Shopping',priority:'Medium',dueDate:tom.toISOString().slice(0,10),dueTime:'17:30',createdAt:new Date(Date.now()-172800000).toISOString(),completed:false,subtasks:[],tags:['errands'],projectId:'',estimate:30,recurring:false},
+  {id:uid(),title:'Read 20 pages',description:'Read a chapter before bed.',category:'Personal',priority:'Low',dueDate:td,dueTime:'21:30',createdAt:new Date(Date.now()-259200000).toISOString(),completed:true,completedAt:isoNow(),subtasks:[],tags:['habit'],projectId:projects[0].id,estimate:25,recurring:false}
+ ];
+ save();
+}
+seedIfEmpty();
+
+function getStats(){
+ const total=tasks.length, completed=tasks.filter(t=>t.completed).length;
+ const overdue=tasks.filter(isOverdue).length,pending=total-completed;
+ const percent=total?Math.round(completed/total*100):0;
+ return {total,completed,pending,overdue,percent};
+}
+function streak(){
+ const doneDates=[...new Set(tasks.filter(t=>t.completed&&t.completedAt).map(t=>dateKey(t.completedAt)))].sort().reverse();
+ let s=0, d=new Date();
+ if(!doneDates.includes(dateKey(d))){d.setDate(d.getDate()-1);if(!doneDates.includes(dateKey(d)))return 0}
+ while(doneDates.includes(dateKey(d))){s++;d.setDate(d.getDate()-1)}
+ return s;
+}
+function xp(){
+ return tasks.filter(t=>t.completed).length*50 + tasks.reduce((a,t)=>a+(t.subtasks||[]).filter(s=>s.done).length*10,0);
+}
+function level(){return Math.floor(xp()/250)+1}
+function achievements(){
+ const a=[
+  ['🌱','First Step',tasks.some(t=>t.completed)],
+  ['🔥','3 Day Streak',streak()>=3],
+  ['⚡','10 Tasks',tasks.filter(t=>t.completed).length>=10],
+  ['🏆','25 Tasks',tasks.filter(t=>t.completed).length>=25],
+  ['🎯','High Five',tasks.filter(t=>t.completed&&t.priority==='High').length>=5],
+  ['📋','Planner',tasks.length>=10],
+  ['🧹','Zero Overdue',tasks.length>0&&tasks.filter(isOverdue).length===0],
+  ['🧠','Focused',JSON.parse(localStorage.getItem('focusSessions')||'0')>=3]
+ ];
+ return a;
+}
+function projectName(id){return projects.find(p=>p.id===id)?.name||''}
+
+function render(){
+ document.body.classList.toggle('dark',prefs.theme!=='light');
+ document.documentElement.classList.toggle('dark',prefs.theme!=='light');
+ document.body.classList.toggle('light',prefs.theme==='light');
+ document.getElementById('themeBtn').innerHTML=`<i class="fa-solid ${prefs.theme==='light'?'fa-moon':'fa-sun'}"></i>`;
+ renderHeader(); renderStats(); renderAchievements(); renderTaskList(); renderAgenda(); renderActiveView();
+}
+function renderHeader(){
+ const h=new Date().getHours();
+ const greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+ document.getElementById('pageTitle').textContent=`${greet} 👋`;
+ const s=getStats();
+ document.getElementById('todayBadge').textContent=tasks.filter(t=>isToday(t)&&!t.completed).length;
+ document.getElementById('overdueBadge').textContent=s.overdue;
+}
+function renderStats(){
+ const s=getStats();
+ ['totalCount','pendingCount','completedCount','overdueCount'].forEach((id,i)=>document.getElementById(id).textContent=[s.total,s.pending,s.completed,s.overdue][i]);
+ document.getElementById('heroPercent').textContent=s.percent; document.getElementById('heroProgress').style.width=s.percent+'%';
+ document.getElementById('heroDone').textContent=`${s.completed} completed`;document.getElementById('heroTotal').textContent=`${s.total} total`;
+ document.getElementById('streakText').textContent=streak();
+ const sc=Math.min(100,Math.round(s.percent*.65 + Math.min(streak()*7,35)));
+ document.getElementById('scoreText').textContent=sc;
+ document.getElementById('scoreRing').firstElementChild.style.background=`conic-gradient(#8b5cf6 ${sc*3.6}deg,rgba(148,163,184,.13) 0deg)`;
+ document.getElementById('scoreLabel').textContent=sc>=80?'Excellent momentum':sc>=50?'Building momentum':sc>0?'Keep going':'Ready when you are';
+ const lv=level(), xpv=xp(), base=(lv-1)*250;
+ document.getElementById('levelText').textContent=lv;document.getElementById('xpText').textContent=`${xpv} XP`;
+ document.getElementById('xpBar').style.width=Math.min(100,(xpv-base)/250*100)+'%';
+}
+function filteredTasks(){
+ let list=[...tasks], q=(document.getElementById('searchInput')?.value||'').trim().toLowerCase();
+ if(q)list=list.filter(t=>(t.title+' '+t.description+' '+(t.tags||[]).join(' ')).toLowerCase().includes(q));
+ const cat=document.getElementById('categoryFilter')?.value||prefs.category||'all';
+ if(cat!=='all')list=list.filter(t=>t.category===cat);
+ if(currentFilter==='active')list=list.filter(t=>!t.completed);
+ if(currentFilter==='completed')list=list.filter(t=>t.completed);
+ if(currentFilter==='today')list=list.filter(isToday);
+ if(currentFilter==='high')list=list.filter(t=>t.priority==='High');
+ if(currentView==='today')list=list.filter(isToday);
+ if(currentView==='upcoming')list=list.filter(t=>t.dueDate && new Date(t.dueDate)>=new Date(todayKey()));
+ if(currentView==='overdue')list=list.filter(isOverdue);
+ if(currentView==='completed')list=list.filter(t=>t.completed);
+ const sort=document.getElementById('sortSelect')?.value||prefs.sort;
+ list.sort((a,b)=>{
+  if(sort==='priority')return priorityRank[b.priority]-priorityRank[a.priority];
+  if(sort==='due')return (a.dueDate||'9999').localeCompare(b.dueDate||'9999')||(a.dueTime||'').localeCompare(b.dueTime||'');
+  if(sort==='title')return a.title.localeCompare(b.title);
+  return new Date(b.createdAt)-new Date(a.createdAt);
+ });
+ return list;
+}
+function renderTaskList(){
+ const el=document.getElementById('taskList'); if(!el)return;
+ const list=filteredTasks();
+ if(!list.length){el.innerHTML=`<div class="py-14 text-center"><div class="w-16 h-16 mx-auto rounded-2xl bg-violet-500/10 grid place-items-center text-violet-400 text-xl"><i class="fa-regular fa-clipboard"></i></div><h3 class="font-bold mt-4">Nothing here</h3><p class="text-xs text-slate-500 mt-1">Create a task or adjust your filters.</p><button onclick="openTaskModal()" class="btn mt-4 rounded-xl bg-violet-600 text-white px-4 py-2 text-xs font-bold">Create task</button></div>`;return}
+ el.innerHTML=list.map(taskHTML).join('');
+}
+function taskHTML(t){
+ const pct=taskCompletion(t), due=t.dueDate?`${fmtDate(t.dueDate)}${t.dueTime?' · '+t.dueTime:''}`:'No due date';
+ const dueClass=isOverdue(t)?'text-rose-400':isToday(t)?'text-cyan-400':'text-slate-500';
+ const cat=t.category.toLowerCase();
+ return `<article draggable="true" ondragstart="dragStart(event,'${t.id}')" ondragover="dragOver(event)" ondrop="dropTask(event,'${t.id}')" class="task-card glass rounded-2xl p-4 ${t.completed?'completed':''}" data-id="${t.id}">
+   <div class="flex gap-3">
+    <button onclick="toggleTask('${t.id}')" class="shrink-0 w-6 h-6 mt-0.5 rounded-full border ${t.completed?'bg-emerald-500 border-emerald-500 text-white':'border-slate-500'} grid place-items-center text-[10px]"><i class="fa-solid fa-check"></i></button>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-start justify-between gap-3"><div class="min-w-0"><h3 class="task-title font-bold text-sm truncate">${esc(t.title)}</h3><p class="text-xs text-slate-500 mt-1 line-clamp-2">${esc(t.description||'No description')}</p></div>
+      <div class="flex gap-1 shrink-0"><button onclick="duplicateTask('${t.id}')" class="w-8 h-8 rounded-lg pill text-slate-500 hover:text-violet-400" title="Duplicate"><i class="fa-regular fa-copy"></i></button><button onclick="openTaskModal('${t.id}')" class="w-8 h-8 rounded-lg pill text-slate-500 hover:text-violet-400" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button><button onclick="deleteTask('${t.id}')" class="w-8 h-8 rounded-lg pill text-slate-500 hover:text-rose-400" title="Delete"><i class="fa-regular fa-trash-can"></i></button></div></div>
+      <div class="flex flex-wrap items-center gap-1.5 mt-3">
+        <span class="text-[10px] px-2 py-1 rounded-full category-${cat}">${esc(t.category)}</span>
+        <span class="text-[10px] px-2 py-1 rounded-full border priority-${t.priority.toLowerCase()}">${esc(t.priority)}</span>
+        ${t.projectId?`<span class="text-[10px] px-2 py-1 rounded-full pill"><i class="fa-solid fa-layer-group mr-1"></i>${esc(projectName(t.projectId))}</span>`:''}
+        <span class="text-[10px] ${dueClass}"><i class="fa-regular fa-clock mr-1"></i>${esc(due)}</span>
+      </div>
+      ${t.subtasks?.length?`<div class="mt-3"><div class="flex justify-between text-[10px] text-slate-500 mb-1"><span>${t.subtasks.filter(s=>s.done).length}/${t.subtasks.length} subtasks</span><span>${pct}%</span></div><div class="h-1.5 progress-track rounded-full overflow-hidden"><div class="progress-fill h-full rounded-full" style="width:${pct}%"></div></div></div>`:''}
+      ${t.tags?.length?`<div class="flex flex-wrap gap-1 mt-2">${t.tags.slice(0,5).map(x=>`<span class="text-[9px] pill px-1.5 py-0.5 rounded">${esc(x)}</span>`).join('')}</div>`:''}
+    </div>
+   </div>
+ </article>`;
+}
+function renderAgenda(){
+ const el=document.getElementById('agenda'); const list=tasks.filter(isToday).sort((a,b)=>(a.dueTime||'99').localeCompare(b.dueTime||'99')).slice(0,5);
+ el.innerHTML=list.length?list.map(t=>`<button onclick="openTaskModal('${t.id}')" class="w-full text-left flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5"><span class="w-2 h-2 rounded-full ${t.priority==='High'?'bg-rose-400':t.priority==='Medium'?'bg-amber-400':'bg-emerald-400'}"></span><span class="text-xs flex-1 truncate">${esc(t.title)}</span><span class="text-[10px] text-slate-500">${t.dueTime||'Anytime'}</span></button>`).join(''):`<div class="text-xs text-slate-500 py-5 text-center">No tasks due today.</div>`;
+}
+function renderAchievements(){
+ const a=achievements(), n=a.filter(x=>x[2]).length;document.getElementById('achievementCount').textContent=`${n} unlocked`;
+ document.getElementById('achievements').innerHTML=a.map(x=>`<div title="${x[1]}" class="rounded-xl p-2 text-center border ${x[2]?'border-violet-500/20 bg-violet-500/10':'border-transparent bg-slate-500/5 opacity-30'}"><div class="text-xl">${x[0]}</div><div class="text-[8px] mt-1 truncate">${x[1]}</div></div>`).join('');
+}
+
+function setView(v){
+ currentView=v;prefs.view=v;savePrefs();
+ document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));
+ const map={dashboard:'view-dashboard',today:'view-list',upcoming:'view-list',overdue:'view-list',completed:'view-list',calendar:'view-calendar',analytics:'view-analytics',habits:'view-habits',focus:'view-focus',projects:'view-projects',settings:'view-settings'};
+ const id=map[v]||'view-dashboard';document.getElementById(id).classList.remove('hidden');
+ document.querySelectorAll('.sidebar-link').forEach(x=>x.classList.toggle('active',x.dataset.view===v));
+ if(id==='view-list')renderListView(v);
+ if(v==='calendar')renderCalendar();
+ if(v==='analytics')renderAnalytics();
+ if(v==='habits')renderHabits();
+ if(v==='focus')renderFocus();
+ if(v==='projects')renderProjects();
+ if(v==='settings')renderSettings();
+}
+function renderActiveView(){setView(currentView)}
+
+function renderListView(v){
+ const title={today:'Today',upcoming:'Upcoming',overdue:'Overdue',completed:'Completed'}[v]||'Tasks';
+ const desc={today:'Everything scheduled for today.',upcoming:'Tasks coming up on your calendar.',overdue:'Tasks that need attention.',completed:'Your completed work.'}[v];
+ document.getElementById('view-list').innerHTML=`<div class="glass rounded-3xl p-5"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5"><div><div class="text-xs text-violet-400 uppercase tracking-widest font-bold">Task view</div><h2 class="text-2xl font-extrabold">${title}</h2><p class="text-xs text-slate-500 mt-1">${desc}</p></div><button onclick="openTaskModal()" class="btn rounded-xl bg-violet-600 text-white px-4 py-2 text-sm font-bold"><i class="fa-solid fa-plus mr-2"></i>Add task</button></div><div class="space-y-3">${filteredTasks().length?filteredTasks().map(taskHTML).join(''):`<div class="py-20 text-center text-sm text-slate-500">No tasks in this view.</div>`}</div></div>`;
+}
+function renderCalendar(){
+ const el=document.getElementById('view-calendar'), now=new Date();
+ const y=now.getFullYear(),m=now.getMonth(),first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),start=first.getDay();
+ const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+ let cells=names.map(n=>`<div class="text-[10px] uppercase tracking-widest text-slate-500 p-2">${n}</div>`).join('');
+ for(let i=0;i<start;i++)cells+=`<div class="calendar-cell rounded-xl bg-slate-500/5"></div>`;
+ for(let d=1;d<=days;d++){
+   const k=`${y}-${pad(m+1)}-${pad(d)}`, its=tasks.filter(t=>t.dueDate===k);
+   cells+=`<div class="calendar-cell rounded-xl border border-slate-500/10 p-2 ${k===todayKey()?'today-ring':''} hover:bg-white/5"><div class="text-xs font-bold">${d}</div>${its.slice(0,3).map(t=>`<button onclick="openTaskModal('${t.id}')" class="w-full text-left mt-1 rounded-lg px-1.5 py-1 bg-violet-500/10 text-violet-300 text-[9px] truncate">${esc(t.title)}</button>`).join('')}${its.length>3?`<div class="text-[9px] text-slate-500 mt-1">+${its.length-3} more</div>`:''}</div>`;
+ }
+ el.innerHTML=`<div class="glass rounded-3xl p-4 md:p-5"><div class="flex justify-between items-center mb-5"><div><div class="text-xs text-violet-400 uppercase tracking-widest font-bold">Calendar view</div><h2 class="text-2xl font-extrabold">${now.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</h2></div><button onclick="openTaskModal()" class="btn rounded-xl bg-violet-600 text-white px-4 py-2 text-sm font-bold">+ Schedule</button></div><div class="grid grid-cols-7 gap-1">${cells}</div></div>`;
+}
+function renderAnalytics(){
+ const done=tasks.filter(t=>t.completed), total=tasks.length;
+ const cats=['Work','Personal','Study','Fitness','Shopping'];
+ const max=Math.max(1,...cats.map(c=>tasks.filter(t=>t.category===c).length));
+ document.getElementById('view-analytics').innerHTML=`<div class="grid lg:grid-cols-2 gap-5">
+ <div class="glass rounded-3xl p-5"><div class="text-xs text-violet-400 uppercase tracking-widest font-bold">Analytics</div><h2 class="text-2xl font-extrabold mt-1">Productivity overview</h2><div class="grid grid-cols-2 gap-3 mt-5">${[['Completion',total?Math.round(done.length/total*100):0+'%'],['Streak',streak()+' days'],['XP',xp()],['Level',level()]].map(x=>`<div class="rounded-2xl bg-slate-500/5 p-4"><div class="text-xs text-slate-500">${x[0]}</div><div class="text-2xl font-extrabold mt-1">${x[1]}</div></div>`).join('')}</div></div>
+ <div class="glass rounded-3xl p-5"><h3 class="font-bold">Tasks by category</h3><div class="space-y-4 mt-5">${cats.map(c=>{let n=tasks.filter(t=>t.category===c).length;return `<div><div class="flex justify-between text-xs mb-1"><span>${c}</span><span>${n}</span></div><div class="h-2 progress-track rounded-full overflow-hidden"><div class="progress-fill h-full rounded-full" style="width:${n/max*100}%"></div></div></div>`}).join('')}</div></div>
+ <div class="glass rounded-3xl p-5 lg:col-span-2"><h3 class="font-bold">Recent activity</h3><div class="mt-4 space-y-2">${tasks.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,10).map(t=>`<div class="flex gap-3 p-3 rounded-xl bg-slate-500/5 text-xs"><span class="text-violet-400"><i class="fa-solid ${t.completed?'fa-check':'fa-plus'}"></i></span><span class="flex-1">${t.completed?'Completed':'Created'} <b>${esc(t.title)}</b></span><span class="text-slate-500">${new Date(t.completedAt||t.createdAt).toLocaleString()}</span></div>`).join('')||'<div class="text-slate-500 text-sm">No activity yet.</div>'}</div></div>
+ </div>`;
+}
+function renderHabits(){
+ document.getElementById('view-habits').innerHTML=`<div class="glass rounded-3xl p-5"><div class="flex justify-between items-center"><div><div class="text-xs text-violet-400 uppercase tracking-widest font-bold">Habit tracking</div><h2 class="text-2xl font-extrabold">Daily habits</h2></div><button onclick="addHabit()" class="btn rounded-xl bg-violet-600 text-white px-4 py-2 text-sm font-bold">+ Habit</button></div><div class="grid md:grid-cols-3 gap-4 mt-5">${habits.map(h=>{const done=h.doneDates.includes(todayKey());return `<div class="glass rounded-2xl p-5"><div class="text-3xl">${h.icon}</div><div class="font-bold mt-3">${esc(h.name)}</div><div class="text-xs text-slate-500 mt-1">${h.streak} day streak</div><button onclick="toggleHabit('${h.id}')" class="btn w-full mt-4 rounded-xl py-2.5 text-xs font-bold ${done?'bg-emerald-500/15 text-emerald-400':'bg-violet-600 text-white'}">${done?'Completed today ✓':'Mark today complete'}</button></div>`}).join('')}</div></div>`;
+}
+function renderFocus(){
+ document.getElementById('view-focus').innerHTML=`<div class="grid lg:grid-cols-[1fr_.7fr] gap-5"><div class="glass rounded-3xl p-8 text-center"><div class="text-xs uppercase tracking-widest text-violet-400 font-bold">Focus mode</div><h2 class="text-2xl font-extrabold mt-1">Pomodoro</h2><div id="focusClock" class="text-7xl md:text-8xl font-extrabold tracking-tight my-10">25:00</div><div class="flex justify-center gap-2"><button onclick="startFocus()" class="btn rounded-xl bg-violet-600 text-white px-6 py-3 font-bold"><i class="fa-solid fa-play mr-2"></i>Start</button><button onclick="resetFocus()" class="btn pill rounded-xl px-5 py-3 font-bold">Reset</button></div><div class="text-xs text-slate-500 mt-5">25 min focus · 5 min break · sessions are stored locally.</div></div><div class="glass rounded-3xl p-5"><h3 class="font-bold">Focus playlist</h3><div class="space-y-2 mt-4">${tasks.filter(t=>!t.completed).slice(0,6).map(t=>`<button onclick="openTaskModal('${t.id}')" class="w-full text-left p-3 rounded-xl bg-slate-500/5 text-xs">${esc(t.title)}<span class="float-right text-slate-500">${t.estimate||'—'}m</span></button>`).join('')||'<div class="text-slate-500 text-sm">No active tasks.</div>'}</div></div></div>`;
+}
+function renderProjects(){
+ document.getElementById('view-projects').innerHTML=`<div class="glass rounded-3xl p-5"><div class="flex justify-between"><div><div class="text-xs text-violet-400 uppercase tracking-widest font-bold">Projects</div><h2 class="text-2xl font-extrabold">Project workspace</h2></div><button onclick="addProject()" class="btn rounded-xl bg-violet-600 text-white px-4 py-2 text-sm font-bold">+ Project</button></div><div class="grid md:grid-cols-3 gap-4 mt-5">${projects.map(p=>{const ts=tasks.filter(t=>t.projectId===p.id),d=ts.filter(t=>t.completed).length,pct=ts.length?Math.round(d/ts.length*100):0;return `<div class="glass rounded-2xl p-5"><div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:${p.color}"></span><b>${esc(p.name)}</b></div><p class="text-xs text-slate-500 mt-2">${esc(p.description||'')}</p><div class="mt-4 h-2 progress-track rounded-full overflow-hidden"><div class="progress-fill h-full rounded-full" style="width:${pct}%"></div></div><div class="flex justify-between text-[10px] text-slate-500 mt-2"><span>${d}/${ts.length} tasks</span><span>${pct}%</span></div></div>`}).join('')}</div></div>`;
+}
+function renderSettings(){
+ document.getElementById('view-settings').innerHTML=`<div class="grid lg:grid-cols-2 gap-5"><div class="glass rounded-3xl p-5"><div class="text-xs text-violet-400 uppercase tracking-widest font-bold">Settings</div><h2 class="text-2xl font-extrabold">Workspace preferences</h2><div class="space-y-3 mt-5"><label class="flex items-center justify-between p-3 rounded-xl bg-slate-500/5"><span><b class="text-sm">Theme</b><span class="block text-xs text-slate-500">Light / dark mode</span></span><button onclick="toggleTheme()" class="pill rounded-xl px-3 py-2 text-xs">${prefs.theme==='light'?'Light':'Dark'}</button></label><label class="flex items-center justify-between p-3 rounded-xl bg-slate-500/5"><span><b class="text-sm">Browser reminders</b><span class="block text-xs text-slate-500">Permission-based notifications</span></span><button onclick="requestNotifications()" class="pill rounded-xl px-3 py-2 text-xs">Enable</button></label><label class="flex items-center justify-between p-3 rounded-xl bg-slate-500/5"><span><b class="text-sm">Sound feedback</b><span class="block text-xs text-slate-500">Completion chime</span></span><input id="soundToggle" type="checkbox" checked class="accent-violet-500"></label></div></div>
+ <div class="glass rounded-3xl p-5"><div class="text-xs text-cyan-400 uppercase tracking-widest font-bold">Data & privacy</div><h2 class="text-2xl font-extrabold">Backup center</h2><p class="text-xs text-slate-500 mt-1">Export a portable JSON backup or restore one on this device.</p><div class="grid grid-cols-2 gap-2 mt-5"><button onclick="exportData()" class="btn pill rounded-xl p-3 text-sm"><i class="fa-solid fa-download mr-2"></i>JSON Export</button><label class="btn pill rounded-xl p-3 text-sm text-center cursor-pointer"><i class="fa-solid fa-upload mr-2"></i>Import JSON<input id="importFile" type="file" accept=".json,application/json" class="hidden"></label></div><button onclick="exportCSV()" class="btn w-full mt-2 pill rounded-xl p-3 text-sm"><i class="fa-solid fa-file-csv mr-2"></i>Export CSV</button><button onclick="clearCompleted()" class="btn w-full mt-2 rounded-xl p-3 text-sm text-rose-400 bg-rose-500/10">Clear completed tasks</button><div class="mt-5 p-3 rounded-xl bg-amber-500/5 text-xs text-slate-500"><b class="text-amber-400">Cloud integrations:</b> Google Calendar, Outlook, Gmail, Drive, Slack, GitHub, Notion, Teams, Zapier, webhooks and API access require OAuth/API credentials and a server or edge function. This standalone build keeps them as explicit integration entry points instead of collecting credentials in client-side code.</div></div></div>`;
+ const f=document.getElementById('importFile'); if(f)f.onchange=importData;
+}
+
+function openTaskModal(id=null){
+ editingId=id; const t=id?tasks.find(x=>x.id===id):null;
+ document.getElementById('taskId').value=id||'';
+ document.getElementById('modalTitle').textContent=t?'Edit task':'Create a task';
+ document.getElementById('taskTitle').value=t?.title||'';
+ document.getElementById('taskDesc').value=t?.description||'';
+ document.getElementById('taskCategory').value=t?.category||'Work';
+ document.getElementById('taskPriority').value=t?.priority||'Medium';
+ document.getElementById('taskDueDate').value=t?.dueDate||todayKey();
+ document.getElementById('taskDueTime').value=t?.dueTime||'';
+ document.getElementById('taskTags').value=(t?.tags||[]).join(', ');
+ document.getElementById('taskEstimate').value=t?.estimate||'';
+ document.getElementById('taskRecurring').checked=!!t?.recurring;
+ document.getElementById('taskRecurrence').value=t?.recurrence||'daily';
+ const ps=document.getElementById('taskProject');ps.innerHTML='<option value="">No project</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');ps.value=t?.projectId||'';
+ const ed=document.getElementById('subtaskEditor');ed.innerHTML='';
+ (t?.subtasks||[]).forEach(s=>addSubtaskInput(s.text,s.done,s.id)); if(!t)addSubtaskInput();
+ const m=document.getElementById('taskModal');m.classList.remove('hidden');m.classList.add('flex');setTimeout(()=>document.getElementById('taskTitle').focus(),50);
+}
+function closeTaskModal(){const m=document.getElementById('taskModal');m.classList.add('hidden');m.classList.remove('flex');editingId=null}
+function addSubtaskInput(text='',done=false,id=uid()){
+ const row=document.createElement('div');row.className='flex items-center gap-2';row.dataset.sid=id;
+ row.innerHTML=`<input type="checkbox" class="subdone accent-violet-500" ${done?'checked':''}><input value="${esc(text)}" class="input subtext flex-1 rounded-xl px-3 py-2 text-xs" placeholder="Subtask"><button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg pill text-slate-500"><i class="fa-solid fa-xmark"></i></button>`;
+ document.getElementById('subtaskEditor').appendChild(row);
+}
+document.getElementById('taskForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const rows=[...document.querySelectorAll('#subtaskEditor>div')];
+ const t={
+  id:editingId||uid(),title:document.getElementById('taskTitle').value.trim(),description:document.getElementById('taskDesc').value.trim(),
+  category:document.getElementById('taskCategory').value,priority:document.getElementById('taskPriority').value,dueDate:document.getElementById('taskDueDate').value,dueTime:document.getElementById('taskDueTime').value,
+  tags:document.getElementById('taskTags').value.split(',').map(x=>x.trim()).filter(Boolean),estimate:Number(document.getElementById('taskEstimate').value)||0,
+  projectId:document.getElementById('taskProject').value,recurring:document.getElementById('taskRecurring').checked,recurrence:document.getElementById('taskRecurrence').value,
+  subtasks:rows.map(r=>({id:r.dataset.sid,text:r.querySelector('.subtext').value.trim(),done:r.querySelector('.subdone').checked})).filter(x=>x.text),
+  createdAt:editingId?(tasks.find(x=>x.id===editingId)?.createdAt||isoNow()):isoNow(),completed:editingId?(tasks.find(x=>x.id===editingId)?.completed||false):false
+ };
+ if(!t.title){toast('A task title is required.','error');return}
+ const idx=tasks.findIndex(x=>x.id===t.id);if(idx>=0)tasks[idx]=t;else tasks.unshift(t);
+ save();closeTaskModal();render();toast(idx>=0?'Task updated':'Task created','success');
+});
+function toggleTask(id){
+ const t=tasks.find(x=>x.id===id);if(!t)return;
+ t.completed=!t.completed;t.completedAt=t.completed?isoNow():null;
+ if(t.completed){playChime();celebrate();if(t.recurring)spawnRecurring(t);toast('Task completed — nice work!','success')}else toast('Task restored','info');
+ save();render();
+}
+function spawnRecurring(t){
+ const d=new Date(`${t.dueDate||todayKey()}T${t.dueTime||'09:00'}`);
+ if(t.recurrence==='weekly')d.setDate(d.getDate()+7);else if(t.recurrence==='monthly')d.setMonth(d.getMonth()+1);else d.setDate(d.getDate()+1);
+ const nt={...t,id:uid(),createdAt:isoNow(),completed:false,completedAt:null,dueDate:d.toISOString().slice(0,10),subtasks:(t.subtasks||[]).map(s=>({...s,id:uid(),done:false}))};
+ tasks.unshift(nt);
+}
+function deleteTask(id){if(!confirm('Delete this task?'))return;tasks=tasks.filter(t=>t.id!==id);save();render();toast('Task deleted','info')}
+function duplicateTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;tasks.unshift({...structuredClone(t),id:uid(),title:t.title+' (copy)',createdAt:isoNow(),completed:false,completedAt:null,subtasks:(t.subtasks||[]).map(s=>({...s,id:uid(),done:false}))});save();render();toast('Task duplicated','success')}
+function clearCompleted(){const n=tasks.filter(t=>t.completed).length;if(!n){toast('No completed tasks to clear','info');return}if(confirm(`Remove ${n} completed task${n>1?'s':''}?`)){tasks=tasks.filter(t=>!t.completed);save();render();toast(`${n} completed task${n>1?'s':''} cleared`,'success')}}
+function playChime(){
+ if(document.getElementById('soundToggle')?.checked===false)return;
+ try{audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.setValueAtTime(660,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(990,audioCtx.currentTime+.13);g.gain.setValueAtTime(.0001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.12,audioCtx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+.35);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.36)}catch{}
+}
+function celebrate(){if(window.confetti)confetti({particleCount:110,spread:75,origin:{y:.62},scalar:.8})}
+function toast(msg,type='info'){
+ const wrap=document.getElementById('toastWrap'),el=document.createElement('div');
+ const icon=type==='success'?'fa-circle-check':type==='error'?'fa-circle-exclamation':'fa-circle-info';
+ const tone=type==='success'?'text-emerald-400':type==='error'?'text-rose-400':'text-cyan-400';
+ el.className='glass-solid rounded-2xl p-3 flex gap-3 items-start pop';el.innerHTML=`<i class="fa-solid ${icon} ${tone} mt-0.5"></i><div class="text-xs flex-1">${esc(msg)}</div><button class="text-slate-500"><i class="fa-solid fa-xmark"></i></button>`;el.querySelector('button').onclick=()=>el.remove();wrap.appendChild(el);setTimeout(()=>el.remove(),3800)
+}
+function toggleTheme(){prefs.theme=prefs.theme==='light'?'dark':'light';savePrefs();render();toast(`${prefs.theme==='light'?'Light':'Dark'} mode enabled`,'info')}
+document.getElementById('themeBtn').onclick=toggleTheme;
+document.getElementById('searchInput').addEventListener('input',render);
+document.getElementById('categoryFilter').addEventListener('change',e=>{prefs.category=e.target.value;savePrefs();render()});
+document.getElementById('sortSelect').addEventListener('change',e=>{prefs.sort=e.target.value;savePrefs();render()});
+document.querySelectorAll('.filter-tab').forEach(b=>b.onclick=()=>{currentFilter=b.dataset.filter;prefs.filter=currentFilter;savePrefs();document.querySelectorAll('.filter-tab').forEach(x=>x.classList.toggle('active',x===b));renderTaskList()});
+document.getElementById('sidebarNav').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view)});
+document.addEventListener('keydown',e=>{
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCommand()}
+ if(e.key.toLowerCase()==='n'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA')openTaskModal();
+ if(e.key==='Escape'){closeCommand();closeTaskModal();closeProfile()}
+});
+document.getElementById('cmdBtn').onclick=openCommand;
+function openCommand(){const m=document.getElementById('commandModal');m.classList.remove('hidden');m.classList.add('flex');renderCommands();setTimeout(()=>document.getElementById('commandInput').focus(),30)}
+function closeCommand(){const m=document.getElementById('commandModal');m.classList.add('hidden');m.classList.remove('flex')}
+function commands(){return[
+ ['New task','Create a new task',openTaskModal],['Today','Show today',()=>setView('today')],['Calendar','Open calendar',()=>setView('calendar')],['Analytics','Open analytics',()=>setView('analytics')],['Focus mode','Start focus mode',startFocus],['Toggle theme','Switch light/dark',toggleTheme],['Export backup','Download JSON',exportData],['Clear completed','Remove completed tasks',clearCompleted]
+]}
+function renderCommands(q=''){const el=document.getElementById('commandList'),list=commands().filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q.toLowerCase()));el.innerHTML=list.map((x,i)=>`<button data-cmd="${i}" class="cmd w-full text-left rounded-xl p-3 hover:bg-violet-500/10 flex items-center justify-between"><span><b class="text-sm">${x[0]}</b><small class="block text-[10px] text-slate-500">${x[1]}</small></span><i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i></button>`).join('');el.querySelectorAll('.cmd').forEach((b,i)=>b.onclick=()=>{list[i][2]();closeCommand()})}
+document.getElementById('commandInput').addEventListener('input',e=>renderCommands(e.target.value));
+function openProfile(){const m=document.getElementById('profileModal');m.classList.remove('hidden');m.classList.add('flex')}
+function closeProfile(){const m=document.getElementById('profileModal');m.classList.add('hidden');m.classList.remove('flex')}
+function toggleNotifications(){document.getElementById('notifDrawer').classList.toggle('hidden');renderNotifications()}
+document.getElementById('notifyBtn').onclick=toggleNotifications;
+function renderNotifications(){const el=document.getElementById('notifications'),over=tasks.filter(isOverdue),today=tasks.filter(t=>isToday(t)&&!t.completed);el.innerHTML=[...over.map(t=>`<div class="p-3 rounded-xl bg-rose-500/10"><b class="text-rose-400 text-xs">Overdue</b><div class="text-xs mt-1">${esc(t.title)}</div></div>`),...today.map(t=>`<div class="p-3 rounded-xl bg-cyan-500/10"><b class="text-cyan-400 text-xs">Due today</b><div class="text-xs mt-1">${esc(t.title)}</div></div>`)].join('')||'<div class="text-xs text-slate-500 py-5 text-center">All clear. No new alerts.</div>'}
+function requestNotifications(){if(!('Notification'in window)){toast('Browser notifications are not supported here','error');return}Notification.requestPermission().then(p=>toast(p==='granted'?'Browser reminders enabled':'Notification permission not granted',p==='granted'?'success':'info'))}
+function exportData(){
+ const blob=new Blob([JSON.stringify({version:3,exportedAt:isoNow(),tasks,projects,habits,prefs},null,2)],{type:'application/json'});downloadBlob(blob,'taskmaster-pro-backup.json');toast('JSON backup exported','success')
+}
+function exportCSV(){
+ const rows=[['Title','Description','Category','Priority','Due Date','Due Time','Status','Project','Tags','Subtasks']];
+ tasks.forEach(t=>rows.push([t.title,t.description,t.category,t.priority,t.dueDate,t.dueTime,t.completed?'Completed':'Pending',projectName(t.projectId),(t.tags||[]).join('|'),(t.subtasks||[]).map(s=>`${s.done?'✓':'○'} ${s.text}`).join(' | ')]));
+ const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\\n');downloadBlob(new Blob([csv],{type:'text/csv'}),'taskmaster-pro-tasks.csv');toast('CSV exported','success')
+}
+function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function importData(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.tasks))throw Error('Invalid backup');tasks=d.tasks;projects=Array.isArray(d.projects)?d.projects:projects;habits=Array.isArray(d.habits)?d.habits:habits;save();render();toast('Backup restored successfully','success')}catch(err){toast('Could not read that backup file','error')}};r.readAsText(f)}
+function parseNaturalTask(){
+ const raw=document.getElementById('nlInput').value.trim();if(!raw){toast('Type a task in natural language first','info');return}
+ let title=raw, priority='Medium', category='Personal', dueDate=todayKey(),dueTime='';
+ if(/\b(high|urgent|important)\b/i.test(raw))priority='High'; else if(/\b(low|later)\b/i.test(raw))priority='Low';
+ if(/\b(work|meeting|project|office|client)\b/i.test(raw))category='Work';
+ else if(/\b(study|exam|homework|school|math|science)\b/i.test(raw))category='Study';
+ else if(/\b(gym|run|workout|fitness)\b/i.test(raw))category='Fitness';
+ else if(/\b(buy|shop|groceries)\b/i.test(raw))category='Shopping';
+ const tm=raw.match(/\b(?:at\s*)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+ if(tm){let h=+tm[1];if(tm[3].toLowerCase()==='pm'&&h<12)h+=12;if(tm[3].toLowerCase()==='am'&&h===12)h=0;dueTime=`${pad(h)}:${tm[2]||'00'}`}
+ if(/\btomorrow\b/i.test(raw)){const d=new Date();d.setDate(d.getDate()+1);dueDate=d.toISOString().slice(0,10)}
+ else if(/\bnext week\b/i.test(raw)){const d=new Date();d.setDate(d.getDate()+7);dueDate=d.toISOString().slice(0,10)}
+ title=raw.replace(/\b(high|urgent|important|low|later|today|tomorrow|next week|at\s*\d{1,2}(?::\d{2})?\s*(?:am|pm))\b/gi,'').replace(/\s+/g,' ').trim()||raw;
+ openTaskModal();document.getElementById('taskTitle').value=title;document.getElementById('taskCategory').value=category;document.getElementById('taskPriority').value=priority;document.getElementById('taskDueDate').value=dueDate;document.getElementById('taskDueTime').value=dueTime;toast('Smart fields detected — review before saving','success')
+}
+function dragStart(e,id){e.dataTransfer.setData('text/plain',id)}
+function dragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
+function dropTask(e,targetId){e.preventDefault();document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));const sourceId=e.dataTransfer.getData('text/plain');if(!sourceId||sourceId===targetId)return;const a=tasks.findIndex(t=>t.id===sourceId),b=tasks.findIndex(t=>t.id===targetId);const [x]=tasks.splice(a,1);tasks.splice(b,0,x);save();render();toast('Task reordered','success')}
+function startFocus(){setView('focus');if(focusTimer)return;focusTimer=setInterval(()=>{focusSeconds--;updateFocusClock();if(focusSeconds<=0){clearInterval(focusTimer);focusTimer=null;focusSeconds=5*60;localStorage.setItem('focusSessions',String((+(localStorage.getItem('focusSessions')||0))+1));celebrate();playChime();toast('Focus session complete! Take a break.','success');render()}},1000);toast('Focus session started','success')}
+function resetFocus(){if(focusTimer){clearInterval(focusTimer);focusTimer=null}focusSeconds=25*60;updateFocusClock()}
+function updateFocusClock(){const el=document.getElementById('focusClock');if(el)el.textContent=`${pad(Math.floor(focusSeconds/60))}:${pad(focusSeconds%60)}`}
+function addHabit(){const name=prompt('Habit name?');if(!name?.trim())return;habits.push({id:uid(),name:name.trim(),icon:'✨',streak:0,doneDates:[]});save();renderHabits();toast('Habit added','success')}
+function toggleHabit(id){const h=habits.find(x=>x.id===id);if(!h)return;const k=todayKey(),i=h.doneDates.indexOf(k);if(i>=0){h.doneDates.splice(i,1);h.streak=Math.max(0,h.streak-1)}else{h.doneDates.push(k);h.streak++;celebrate();playChime()}save();renderHabits()}
+function addProject(){const name=prompt('Project name?');if(!name?.trim())return;projects.push({id:uid(),name:name.trim(),color:'#8b5cf6',description:'New project'});save();render();toast('Project created','success')}
+
+/* Subtask quick completion: click task body with Alt? kept accessible via editor. */
+document.addEventListener('click',e=>{
+ const card=e.target.closest('.task-card'); if(!card||e.target.closest('button'))return;
+ if(e.altKey){openTaskModal(card.dataset.id)}
+});
+window.addEventListener('beforeunload',save);
+render();
+</script>
+</div>
+</body>
+</html>
